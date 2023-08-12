@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive Vector</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="400" height="400"></canvas>
+
+  <script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+
+    var vector = {
+      tailX: 100, // X-coordinate of the vector tail
+      tailY: 200, // Y-coordinate of the vector tail
+      length: 100, // Initial length
+      angle: Math.PI / 4 // Initial angle (in radians)
+    };
+
+    var isDragging = false;
+    var offset = { x: 0, y: 0 };
+    //-------------------------------------
+    var isMiddleDragging = false;
+    var middleOffset = { x: 0, y: 0 };
+    //-------------------------------------
+
+    canvas.addEventListener("mousedown", function(event) {
+      var rect = canvas.getBoundingClientRect();
+      var mouseX = event.clientX - rect.left; // mousedown's relative x position
+      var mouseY = event.clientY - rect.top; // mousedown's relative y position
+
+      var tipX = vector.tailX + Math.cos(vector.angle) * vector.length;
+      var tipY = vector.tailY + Math.sin(vector.angle) * vector.length;
+
+      var dx = mouseX - tipX;
+      var dy = mouseY - tipY;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Check if the mouse is clicked on the tip of the vector
+      if (dist < 10) {
+        isDragging = true;
+        offset.x = dx;
+        offset.y = dy;
+      }
+      // --------------------------------------------------------------------------
+      // --------------------------------------------------------------------------
+      var middleX = vector.tailX + Math.cos(vector.angle) * ((vector.length)/2);
+      var middleY = vector.tailY + Math.sin(vector.angle) * ((vector.length)/2);
+
+      var middle_dx = mouseX - middleX;
+      var middle_dy = mouseY - middleY;
+      var middle_dist = Math.sqrt(middle_dx * middle_dx + middle_dy * middle_dy);
+
+      //check if the mouse is clicked on the middle of the vector
+      if (middle_dist < 10) {
+        isMiddleDragging = true;
+        middleOffset.x = middle_dx;
+        middleOffset.y = middle_dy;
+      }
+      // --------------------------------------------------------------------------
+      // --------------------------------------------------------------------------
+      
+    });
+
+    canvas.addEventListener("mousemove", function(event) {
+      if (isDragging) {
+        var rect = canvas.getBoundingClientRect();
+        var mouseX = event.clientX - rect.left;
+        var mouseY = event.clientY - rect.top;
+
+        var Dx = mouseX - vector.tailX - offset.x;
+        var Dy = mouseY - vector.tailY - offset.y;
+
+        vector.length = Math.sqrt(Dx * Dx + Dy * Dy);
+        vector.angle = Math.atan2(Dy, Dx);
+      }
+      // ------------------------------------------------------------------
+      if (isMiddleDragging) {
+        var rect = canvas.getBoundingClientRect();
+        var mouseX = event.clientX - rect.left;
+        var mouseY = event.clientY - rect.top;
+        vector.tailX = mouseX - Math.cos(vector.angle) * ((vector.length)/2) - middleOffset.x;
+        vector.tailY = mouseY - Math.sin(vector.angle) * ((vector.length)/2) - middleOffset.y;
+        
+      }
+      // ------------------------------------------------------------------
+     
+    });
+
+    canvas.addEventListener("mouseup", function() {
+      isDragging = false;
+      isMiddleDragging = false;
+    });
+
+    function drawVector() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate tip coordinates
+      var tipX = vector.tailX + Math.cos(vector.angle) * vector.length;
+      var tipY = vector.tailY + Math.sin(vector.angle) * vector.length;
+
+      // Draw the vector
+      ctx.beginPath();
+      ctx.moveTo(vector.tailX, vector.tailY);
+      ctx.lineTo(tipX, tipY);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.closePath();
+
+      // Draw the arrowhead
+      var arrowSize = 10;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - arrowSize * Math.cos(vector.angle - Math.PI / 6), tipY - arrowSize * Math.sin(vector.angle - Math.PI / 6));
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - arrowSize * Math.cos(vector.angle + Math.PI / 6), tipY - arrowSize * Math.sin(vector.angle + Math.PI / 6));
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.closePath();
+    }
+
+    function update() {
+      drawVector();
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>
+
